@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Public API (Cloudflare Worker proxy in front of the Render backend).
+  NEXT_PUBLIC_API_BASE_URL = "https://edubridge-proxy.michaelrodri091.workers.dev/api/v1"
+  NODE_VERSION = "20"
+
+# Netlify's Next.js runtime: handles SSR, ISR and the App Router.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
