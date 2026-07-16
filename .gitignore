@@ -27,9 +27,19 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env
 
 # vercel
 .vercel
+
+# netlify
+.netlify
+
+# local Claude Code settings — never publish
+.claude/
+
+# markdown docs are kept out of the repo
+*.md
 
 # typescript
 *.tsbuildinfo

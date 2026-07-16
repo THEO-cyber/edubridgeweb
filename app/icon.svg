@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="EduBridge">
+  <rect width="512" height="512" rx="112" fill="#1A237E"/>
+  <g fill="none" stroke="#ffffff" stroke-width="58" stroke-linecap="round">
+    <!-- bowl of the "e": full circle opened at the lower right -->
+    <path d="M360 256 A104 104 0 1 0 329.5 329.5"/>
+    <!-- crossbar -->
+    <path d="M152 256 H360"/>
+  </g>
+</svg>
