@@ -77,11 +77,13 @@ export default function Header() {
                         <Link href="/teach/dashboard" onClick={() => setAcctOpen(false)} className="block rounded-lg bg-brand-50 px-3 py-2 text-sm font-semibold text-navy hover:bg-brand-100">Instructor dashboard</Link>
                       ) : null}
                       <Link href="/dashboard" onClick={() => setAcctOpen(false)} className="block rounded-lg px-3 py-2 text-sm hover:bg-soft">My Learning</Link>
+                      <Link href="/account" onClick={() => setAcctOpen(false)} className="block rounded-lg px-3 py-2 text-sm hover:bg-soft">Profile</Link>
                       <Link href="/wishlist" onClick={() => setAcctOpen(false)} className="block rounded-lg px-3 py-2 text-sm hover:bg-soft">Wishlist</Link>
                       <Link href="/certificates" onClick={() => setAcctOpen(false)} className="block rounded-lg px-3 py-2 text-sm hover:bg-soft">Certificates</Link>
                       {!isInstructor && (
                         <Link href="/teach" onClick={() => setAcctOpen(false)} className="block rounded-lg px-3 py-2 text-sm hover:bg-soft">Teach on EduBridge</Link>
                       )}
+                      <Link href="/account/settings" onClick={() => setAcctOpen(false)} className="block rounded-lg px-3 py-2 text-sm hover:bg-soft">Settings</Link>
                       <button onClick={() => { setAcctOpen(false); logout(); }} className="block w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">Log out</button>
                     </div>
                   </>
@@ -135,9 +137,11 @@ export default function Header() {
                 ? <MobileLink href="/teach/dashboard" onClick={() => setMenuOpen(false)}>Instructor dashboard</MobileLink>
                 : <MobileLink href="/teach" onClick={() => setMenuOpen(false)}>Teach on EduBridge</MobileLink>}
               {user && <MobileLink href="/dashboard" onClick={() => setMenuOpen(false)}>My Learning</MobileLink>}
+              {user && <MobileLink href="/account" onClick={() => setMenuOpen(false)}>Profile</MobileLink>}
               {user && <MobileLink href="/wishlist" onClick={() => setMenuOpen(false)}>Wishlist</MobileLink>}
               {user && <MobileLink href="/certificates" onClick={() => setMenuOpen(false)}>Certificates</MobileLink>}
               {user && <MobileLink href="/notifications" onClick={() => setMenuOpen(false)}>Notifications</MobileLink>}
+              {user && <MobileLink href="/account/settings" onClick={() => setMenuOpen(false)}>Settings</MobileLink>}
             </nav>
 
             <div className="border-t border-line pt-4">

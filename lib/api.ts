@@ -110,6 +110,7 @@ export class ApiError extends Error {
 export const api = {
   get: (path: string, opts?: Opts) => request("GET", path, opts),
   post: (path: string, body?: unknown, opts?: Opts) => request("POST", path, { ...opts, body }),
+  put: (path: string, body?: unknown, opts?: Opts) => request("PUT", path, { ...opts, body }),
   patch: (path: string, body?: unknown, opts?: Opts) => request("PATCH", path, { ...opts, body }),
   del: (path: string, opts?: Opts) => request("DELETE", path, opts),
 };

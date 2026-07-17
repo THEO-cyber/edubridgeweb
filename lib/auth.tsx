@@ -17,6 +17,7 @@ interface AuthState {
   loading: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
   register: (data: RegisterInput) => Promise<AuthUser>;
+  updateUser: (patch: Partial<AuthUser>) => void;
   logout: () => void;
 }
 
@@ -82,6 +83,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist]
   );
 
+  // Merge fresh profile fields into the cached user so the header (name, avatar)
+  // updates immediately after the account page saves, without a re-login.
+  const updateUser = useCallback((patch: Partial<AuthUser>) => {
+    setUser((prev) => {
+      const next = { ...(prev ?? {}), ...patch } as AuthUser;
+      localStorage.setItem(USER_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
@@ -90,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthCtx.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthCtx.Provider value={{ user, token, loading, login, register, updateUser, logout }}>
       {children}
     </AuthCtx.Provider>
   );
