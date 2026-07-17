@@ -28,6 +28,39 @@ export function pickList(payload: any, keys: string[]): any[] {
 
 type Opts = { token?: string; body?: unknown; cache?: RequestCache; revalidate?: number };
 
+/**
+ * Turns an API error body into something worth showing a person.
+ *
+ * The API reports field problems as `{ message: "Validation failed", errors: [...] }`
+ * — the useful part is `errors`, so read that first. Reading `message` first
+ * tells a learner only that something "failed", never what to change.
+ */
+function errorMessage(json: any, status: number): string {
+  const errors = json?.errors;
+  if (Array.isArray(errors) && errors.length) {
+    return errors.map((e: any) => (typeof e === "string" ? e : e?.message ?? String(e))).join("\n");
+  }
+  const msg = json?.message ?? json?.error;
+  if (typeof msg === "string" && msg && msg.toLowerCase() !== "validation failed") return msg;
+  if (Array.isArray(msg) && msg.length) return msg.join("\n");
+
+  switch (status) {
+    case 401: return "Your email or password is incorrect.";
+    case 403: return "You don't have access to this.";
+    case 404: return "We couldn't find what you were looking for.";
+    case 409: return "That already exists.";
+    case 429: return "Too many attempts. Please wait a moment and try again.";
+    default:  return status >= 500
+      ? "EduBridge is having a problem right now. Please try again shortly."
+      : "Something went wrong. Please check your details and try again.";
+  }
+}
+
+/** Network failures surface as "Failed to fetch", which means nothing to a learner. */
+function isNetworkError(e: unknown): boolean {
+  return e instanceof TypeError || /fetch|network|aborted/i.test(String((e as Error)?.message ?? ""));
+}
+
 async function request(method: string, path: string, opts: Opts = {}): Promise<any> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
@@ -40,7 +73,20 @@ async function request(method: string, path: string, opts: Opts = {}): Promise<a
   if (opts.cache) init.cache = opts.cache;
   if (opts.revalidate !== undefined) init.next = { revalidate: opts.revalidate };
 
-  const res = await fetch(`${API_BASE}${path}`, init);
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, init);
+  } catch (e) {
+    if (isNetworkError(e)) {
+      // Usually offline — but it is also what a cold-starting backend looks like.
+      throw new ApiError(
+        "Can't reach EduBridge. Check your internet connection and try again.",
+        0
+      );
+    }
+    throw e;
+  }
+
   let json: any = null;
   try {
     json = await res.json();
@@ -48,9 +94,7 @@ async function request(method: string, path: string, opts: Opts = {}): Promise<a
     /* non-JSON */
   }
   if (!res.ok) {
-    const msg =
-      (json && (json.message || json.error)) || `Request failed (${res.status})`;
-    throw new ApiError(typeof msg === "string" ? msg : "Request failed", res.status);
+    throw new ApiError(errorMessage(json, res.status), res.status);
   }
   return unwrap(json);
 }
@@ -92,7 +136,11 @@ export async function getCourseBySlug(slug: string): Promise<any | null> {
 
 export async function getCategories(): Promise<any[]> {
   try {
-    const data = await request("GET", `/search/categories`, { revalidate: 600 });
+    // Short window on purpose: categories are edited from the super-admin
+    // console, and a long cache makes a change there look like it failed. The
+    // API caches this list itself and drops that cache on every write, so
+    // asking more often is cheap.
+    const data = await request("GET", `/search/categories`, { revalidate: 30 });
     return pickList(data, ["categories", "items"]);
   } catch {
     return [];
