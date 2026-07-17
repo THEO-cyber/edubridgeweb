@@ -6,9 +6,10 @@ export const revalidate = 120;
 
 export default async function HomePage() {
   const [courses, categories] = await Promise.all([getCourses({ limit: "8" }), getCategories()]);
-  const topCats = categories
-    .filter((c: any) => (c._count?.courses ?? c.courseCount ?? 0) > 0)
-    .slice(0, 8);
+  // The API already returns only the categories the super-admin has marked
+  // active, so that curation is what we show — filtering by course count here
+  // would silently hide a category the moment an admin created it.
+  const topCats = categories.slice(0, 8);
 
   return (
     <>

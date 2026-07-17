@@ -47,16 +47,15 @@ export default async function CoursesPage({
       {categories.length > 0 && (
         <div className="mb-8 flex flex-wrap gap-2">
           <Chip href={q ? `/courses?q=${encodeURIComponent(q)}` : "/courses"} active={!activeCat}>All</Chip>
-          {categories
-            .filter((c: any) => (c._count?.courses ?? c.courseCount ?? 1) > 0 || activeCat?.id === c.id)
-            .map((c: any) => {
-              const href = `/courses?${q ? `q=${encodeURIComponent(q)}&` : ""}category=${c.slug ?? c.id}`;
-              return (
-                <Chip key={c.id} href={href} active={activeCat?.id === c.id}>
-                  {c.icon ? `${c.icon} ` : ""}{c.name}
-                </Chip>
-              );
-            })}
+          {/* Whatever the super-admin has active, learners can browse. */}
+          {categories.map((c: any) => {
+            const href = `/courses?${q ? `q=${encodeURIComponent(q)}&` : ""}category=${c.slug ?? c.id}`;
+            return (
+              <Chip key={c.id} href={href} active={activeCat?.id === c.id}>
+                {c.icon ? `${c.icon} ` : ""}{c.name}
+              </Chip>
+            );
+          })}
         </div>
       )}
 
