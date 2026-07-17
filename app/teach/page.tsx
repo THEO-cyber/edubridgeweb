@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 
@@ -9,8 +10,16 @@ type AppStatus = "pending" | "approved" | "rejected" | null;
 
 export default function TeachPage() {
   const { user, token, loading } = useAuth();
+  const router = useRouter();
   const [status, setStatus] = useState<AppStatus>(undefined as unknown as AppStatus);
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
+
+  // Approved instructors don't apply — they teach. Send them to their dashboard.
+  useEffect(() => {
+    if (loading) return;
+    const role = (user?.role || "").toUpperCase();
+    if (role === "INSTRUCTOR" || role === "SUPER_ADMIN") router.replace("/teach/dashboard");
+  }, [loading, user, router]);
 
   const [motivation, setMotivation] = useState("");
   const [experience, setExperience] = useState("");
