@@ -91,9 +91,9 @@ export default function TeachPage() {
         {!loading && !user && (
           <Panel>
             <h2 className="text-2xl font-bold">Ready to teach?</h2>
-            <p className="mt-2 text-muted">Create a free account or log in, then complete your instructor application here.</p>
+            <p className="mt-2 text-muted">Create your instructor account or log in, then complete your instructor application here.</p>
             <div className="mt-6 flex gap-3">
-              <Link href="/register" className="rounded-xl bg-navy px-6 py-3 font-semibold text-white hover:bg-brand-700">Create account</Link>
+              <Link href="/teach/register" className="rounded-xl bg-navy px-6 py-3 font-semibold text-white hover:bg-brand-700">Create instructor account</Link>
               <Link href="/login?next=/teach" className="rounded-xl border border-line px-6 py-3 font-semibold hover:bg-soft">Log in</Link>
             </div>
           </Panel>
