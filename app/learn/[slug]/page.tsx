@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
@@ -8,6 +8,8 @@ import { api, getCourseBySlug, ApiError } from "@/lib/api";
 import { formatDuration } from "@/lib/format";
 import LessonNotes from "@/components/LessonNotes";
 import CourseDiscussions from "@/components/CourseDiscussions";
+import LessonVideo from "@/components/LessonVideo";
+import OfflineButton from "@/components/OfflineButton";
 
 type Lesson = {
   id: string;
@@ -163,7 +165,7 @@ export default function ClassroomPage() {
           <span className="text-line">/</span>
           <span className="truncate font-medium text-ink">{courseTitle}</span>
         </div>
-        <VideoStage key={currentId} lessonId={currentId!} token={token!} title={current?.title ?? ""} />
+        <LessonVideo key={currentId} lessonId={currentId!} token={token!} title={current?.title ?? ""} />
 
         {/* Lesson meta + controls */}
         <div className="container-x w-full py-6">
@@ -195,6 +197,17 @@ export default function ClassroomPage() {
             >
               {current?.isCompleted ? "✓ Completed" : "Mark as complete"}
             </button>
+            {current && courseId && (
+              <OfflineButton
+                key={`off-${current.id}`}
+                lessonId={current.id}
+                lessonTitle={current.title}
+                courseId={courseId}
+                courseTitle={courseTitle}
+                courseSlug={slug}
+                token={token!}
+              />
+            )}
             <div className="ml-auto flex gap-2">
               <button
                 onClick={() => goto(-1)}
@@ -258,73 +271,6 @@ export default function ClassroomPage() {
 
         <Curriculum lessons={lessons} currentId={currentId} onSelect={(id) => { setCurrentId(id); setSidebarOpen(false); }} />
       </aside>
-    </div>
-  );
-}
-
-/* ── Video area: resolves a lesson's stream URL, or shows a graceful placeholder ── */
-function VideoStage({ lessonId, token, title }: { lessonId: string; token: string; title: string }) {
-  const [status, setStatus] = useState<"loading" | "ready" | "none">("loading");
-  const [url, setUrl] = useState<string | null>(null);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setStatus("loading");
-    setUrl(null);
-    (async () => {
-      try {
-        const lesson = await api.get(`/lessons/${lessonId}`, { token });
-        const direct = lesson?.videoUrl;
-        const videoId = lesson?.videos?.[0]?.id;
-        if (videoId) {
-          const s = await api.get(`/video-processing/stream-url/${videoId}`, { token });
-          if (!cancelled && s?.streamUrl) {
-            setUrl(s.streamUrl);
-            setStatus("ready");
-            return;
-          }
-        }
-        if (direct) {
-          if (!cancelled) {
-            setUrl(direct);
-            setStatus("ready");
-          }
-          return;
-        }
-        if (!cancelled) setStatus("none");
-      } catch {
-        if (!cancelled) setStatus("none");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [lessonId, token]);
-
-  return (
-    <div ref={ref} className="w-full bg-black">
-      <div className="container-x">
-        <div className="relative mx-auto aspect-video w-full max-w-5xl">
-          {status === "ready" && url ? (
-            <video key={url} src={url} controls autoPlay className="h-full w-full" />
-          ) : (
-            <div className="grid h-full w-full place-items-center bg-gradient-to-br from-navy to-brand-700 text-center text-white">
-              {status === "loading" ? (
-                <p className="text-white/80">Loading lesson…</p>
-              ) : (
-                <div className="px-6">
-                  <svg className="mx-auto h-14 w-14 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <rect x="2" y="4" width="20" height="14" rx="2" /><polygon points="10 8 16 11 10 14 10 8" fill="currentColor" />
-                  </svg>
-                  <p className="mt-4 text-lg font-semibold">Video coming soon</p>
-                  <p className="mt-1 text-sm text-white/70">{title ? `“${title}” — ` : ""}lesson materials are below. You can still mark it complete.</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
