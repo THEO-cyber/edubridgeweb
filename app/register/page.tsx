@@ -120,7 +120,7 @@ export default function RegisterPage() {
           </button>
           <p className="text-center text-xs text-muted">
             Want to teach?{" "}
-            <Link href="/teach/register" className="font-semibold text-brand-500 hover:underline">Create an instructor account</Link>.
+            <Link href="/teach/register" className="font-semibold text-brand-500 hover:underline">Apply to teach</Link>.
           </p>
         </form>
         <p className="mt-6 text-center text-sm text-muted">
