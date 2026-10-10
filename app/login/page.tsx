@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import Field from "@/components/Field";
+import GoogleButton from "@/components/GoogleButton";
 
 function LoginForm() {
   const { login } = useAuth();
@@ -35,9 +36,26 @@ function LoginForm() {
       <div className="w-full max-w-md rounded-2xl border border-line bg-white p-8 shadow-card">
         <h1 className="text-2xl font-extrabold">Welcome back</h1>
         <p className="mt-1 text-muted">Log in to continue learning.</p>
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+
+        <div className="mt-6">
+          <GoogleButton onSuccess={() => router.push(next)} onError={setErr} />
+        </div>
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-line" />
+          <span className="text-xs font-semibold text-muted">OR</span>
+          <div className="h-px flex-1 bg-line" />
+        </div>
+
+        <form onSubmit={onSubmit} className="space-y-4">
           <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" />
-          <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" />
+          <div>
+            <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" />
+            <div className="mt-1.5 text-right">
+              <Link href="/forgot-password" className="text-xs font-semibold text-brand-500 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+          </div>
           {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{err}</p>}
           <button disabled={busy} className="w-full rounded-xl bg-navy py-3 font-bold text-white transition hover:bg-brand-700 disabled:opacity-60">
             {busy ? "Logging in…" : "Log in"}

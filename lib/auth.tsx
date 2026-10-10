@@ -17,6 +17,7 @@ interface AuthState {
   loading: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
   register: (data: RegisterInput) => Promise<AuthUser>;
+  loginWithGoogle: (idToken: string) => Promise<AuthUser>;
   updateUser: (patch: Partial<AuthUser>) => void;
   logout: () => void;
 }
@@ -83,6 +84,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist]
   );
 
+  const loginWithGoogle = useCallback(
+    async (idToken: string) => {
+      const data = await api.post("/auth/google/mobile", { idToken });
+      const { token: t, user: u } = extractAuth(data);
+      if (!t) throw new Error("Google sign-in failed");
+      persist(t, u);
+      return u;
+    },
+    [persist]
+  );
+
   // Merge fresh profile fields into the cached user so the header (name, avatar)
   // updates immediately after the account page saves, without a re-login.
   const updateUser = useCallback((patch: Partial<AuthUser>) => {
@@ -101,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthCtx.Provider value={{ user, token, loading, login, register, updateUser, logout }}>
+    <AuthCtx.Provider value={{ user, token, loading, login, register, loginWithGoogle, updateUser, logout }}>
       {children}
     </AuthCtx.Provider>
   );

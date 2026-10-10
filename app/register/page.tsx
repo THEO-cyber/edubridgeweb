@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import Field from "@/components/Field";
+import GoogleButton from "@/components/GoogleButton";
 
 // Mirrors the API's password policy so a learner sees what is required while
 // typing, rather than discovering it from a rejection.
@@ -61,7 +62,17 @@ export default function RegisterPage() {
       <div className="w-full max-w-md rounded-2xl border border-line bg-white p-8 shadow-card">
         <h1 className="text-2xl font-extrabold">Create your account</h1>
         <p className="mt-1 text-muted">Join free and start learning today.</p>
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+
+        <div className="mt-6">
+          <GoogleButton onSuccess={() => router.push("/dashboard")} onError={setErr} />
+        </div>
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1 bg-line" />
+          <span className="text-xs font-semibold text-muted">OR</span>
+          <div className="h-px flex-1 bg-line" />
+        </div>
+
+        <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Field label="First name" type="text" value={firstName} onChange={setFirstName} placeholder="Ada" />
             <Field label="Last name" type="text" value={lastName} onChange={setLastName} placeholder="Lovelace" />
