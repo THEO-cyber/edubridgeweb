@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "@livekit/components-styles";
 import {
   LiveKitRoom,
@@ -9,8 +9,9 @@ import {
   RoomAudioRenderer,
   useTracks,
   useLocalParticipant,
+  useRoomContext,
 } from "@livekit/components-react";
-import { Track } from "livekit-client";
+import { Track, RoomEvent } from "livekit-client";
 import Whiteboard from "./Whiteboard";
 
 export default function LiveRoom({
@@ -42,12 +43,59 @@ export default function LiveRoom({
   );
 }
 
+type ViewMsg = { type: "view"; mode: "whiteboard" | "video" };
+
 function RoomContent({ isInstructor, onLeave }: { isInstructor: boolean; onLeave: () => void }) {
+  const room = useRoomContext();
+  // The lecturer's tap drives this for everyone — it is never a per-viewer
+  // preference, so there is exactly one source of truth: the instructor.
   const [boardOpen, setBoardOpen] = useState(false);
   const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare]);
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled } = useLocalParticipant();
   const [busy, setBusy] = useState<"mic" | "cam" | null>(null);
   const [actionErr, setActionErr] = useState("");
+
+  useEffect(() => {
+    const onData = (payload: Uint8Array, _p?: unknown, _k?: unknown, topic?: string) => {
+      if (topic !== "whiteboard") return;
+      try {
+        const msg = JSON.parse(new TextDecoder().decode(payload));
+        if (msg.type === "view") setBoardOpen(msg.mode === "whiteboard");
+      } catch {
+        /* ignore */
+      }
+    };
+    room.on(RoomEvent.DataReceived, onData);
+
+    // A student who joins while the board is already up should land on it
+    // immediately, not on the video grid by default.
+    const onJoin = () => {
+      if (isInstructor) {
+        const msg: ViewMsg = { type: "view", mode: boardOpen ? "whiteboard" : "video" };
+        room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(msg)), {
+          reliable: true,
+          topic: "whiteboard",
+        });
+      }
+    };
+    room.on(RoomEvent.ParticipantConnected, onJoin);
+
+    return () => {
+      room.off(RoomEvent.DataReceived, onData);
+      room.off(RoomEvent.ParticipantConnected, onJoin);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room, isInstructor, boardOpen]);
+
+  function setView(open: boolean) {
+    setBoardOpen(open);
+    if (!isInstructor) return; // students never drive this, only reflect it
+    const msg: ViewMsg = { type: "view", mode: open ? "whiteboard" : "video" };
+    room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(msg)), {
+      reliable: true,
+      topic: "whiteboard",
+    });
+  }
 
   async function toggleMic() {
     setBusy("mic");
@@ -108,14 +156,16 @@ function RoomContent({ isInstructor, onLeave }: { isInstructor: boolean; onLeave
           onLabel="Stop video"
           offLabel="Start video"
         />
-        <button
-          onClick={() => setBoardOpen((v) => !v)}
-          className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
-            boardOpen ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20"
-          }`}
-        >
-          {boardOpen ? "Show video" : "Whiteboard"}
-        </button>
+        {isInstructor && (
+          <button
+            onClick={() => setView(!boardOpen)}
+            className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+              boardOpen ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20"
+            }`}
+          >
+            {boardOpen ? "Show video" : "Whiteboard"}
+          </button>
+        )}
         <button
           onClick={onLeave}
           className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-700"
