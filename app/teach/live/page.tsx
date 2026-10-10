@@ -131,6 +131,11 @@ function SessionRow({ session: s, token, reload }: { session: any; token: string
     await api.del(`/live-sessions/${s.id}`, { token });
     await reload();
   }
+  async function endNow() {
+    if (!confirm(`End “${s.title}” now? Students still in the room will be disconnected, and you'll be free to schedule a new session.`)) return;
+    await api.patch(`/live-sessions/${s.id}/end`, {}, { token });
+    await reload();
+  }
 
   return (
     <div className="rounded-2xl border border-line bg-white p-4 shadow-card">
@@ -154,7 +159,11 @@ function SessionRow({ session: s, token, reload }: { session: any; token: string
               {live ? "Join" : "Start"}
             </button>
           )}
-          <button onClick={del} className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">Delete</button>
+          {live ? (
+            <button onClick={endNow} className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">End session</button>
+          ) : (
+            <button onClick={del} className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">Delete</button>
+          )}
         </div>
       </div>
 

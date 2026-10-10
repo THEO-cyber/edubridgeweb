@@ -14,7 +14,7 @@ type JoinData = { serverUrl: string; token: string; title: string };
 
 export default function LiveRoomPage() {
   const { id } = useParams<{ id: string }>();
-  const { token, loading: authLoading } = useAuth();
+  const { token, user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [state, setState] = useState<"loading" | "ready" | "error" | "unconfigured">("loading");
   const [join, setJoin] = useState<JoinData | null>(null);
@@ -86,7 +86,14 @@ export default function LiveRoomPage() {
     );
   }
 
-  return join ? <LiveRoom serverUrl={join.serverUrl} token={join.token} onLeave={leave} /> : null;
+  return join ? (
+    <LiveRoom
+      serverUrl={join.serverUrl}
+      token={join.token}
+      isInstructor={user?.role === "INSTRUCTOR"}
+      onLeave={leave}
+    />
+  ) : null;
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
